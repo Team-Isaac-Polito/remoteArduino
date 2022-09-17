@@ -1,27 +1,31 @@
 //ROS
 #include "ros.h"
-#include "geometry_msgs/Twist.h"
 #include <std_msgs/UInt16.h>
 #include <ros/time.h>
 
 ros::NodeHandle nh;
-geometry_msgs::Twist twist;
-ros::Publisher joy_pub("cmd_vel", &twist);
 
 std_msgs::UInt16 button_msg;
 ros::Publisher pub_button("buttons", &button_msg);
+
+std_msgs::UInt16 vel;
+ros::Publisher pub_vel("vel", &vel);
+
+std_msgs::UInt16 curv;
+ros::Publisher pub_curv("curv", &curv);
+
 
 // timers for the sub-main loop
 unsigned long currentMillis;
 long previousMillis = 0;    // set up timers
 float loopTime = 20;
 
-float stick1;
-float stick2;
-float stick3;
-float stick4;
-float stick5;
-float stick6;
+uint16_t stick1;
+uint16_t stick2;
+uint16_t stick3;
+uint16_t stick4;
+uint16_t stick5;
+uint16_t stick6;
 uint16_t combo = 0;
 
 void setup() {
@@ -42,12 +46,14 @@ void setup() {
 
   //nh.getHardware()->setBaud(115200);      // set baud rate to 115200
   nh.initNode();              // init ROS
-  nh.advertise(joy_pub);      // advertise topic
+  nh.advertise(pub_vel);      // advertise topic
+  nh.advertise(pub_curv);      // advertise topic
   nh.advertise(pub_button);   // advertise topic
 
 }
 
-float deadzone(float value) {
+uint16_t deadzone(uint16_t value) {
+  return value;
      if (value > 50) {
         value = value - 50;
      }
@@ -76,7 +82,7 @@ int invButtons(int value) {
 
 // put your main code here, to run repeatedly:
 void loop() {
-    if(analogRead(A6)>350)
+  if(analogRead(A6)>350)
     digitalWrite(13,HIGH);
   else
     digitalWrite(13,LOW);
@@ -103,8 +109,8 @@ void loop() {
   stick4 = analogRead(A3);
   stick5 = analogRead(A4);
   stick6 = analogRead(A5);
-  
-stick1 = stick1 - 512;
+
+/*stick1 = stick1 - 512;
             stick1 = deadzone(stick1);
             stick2 = stick2 - 512;
             stick2 = deadzone(stick2);
@@ -114,26 +120,23 @@ stick1 = stick1 - 512;
             stick4 = deadzone(stick4);
             stick5 = stick5 - 512;
             stick5 = deadzone(stick5);
-            stick6 = stick6 - 15 - 512;
+            stick6 = stick6 - 512;
             stick6 = deadzone(stick6);            
 
             stick5 = stick5 * -1;   // invert value/direction as required based on wiring
             stick3 = stick3 * -1;
 
             //stick3 = stick3 * 2;    // extra scaling for yaw to mke driving nice
+*/
 
             // *** broadcast cmd_vel twist message **
 
-            // Update the Twist message
-            twist.linear.x = stick5;
-            twist.linear.y = stick4;
-            twist.linear.z = stick6;
-        
-            twist.angular.x = stick2;
-            twist.angular.y = stick1;
-            twist.angular.z = stick3;
+            vel.data = stick2;
+            curv.data = stick1;
+            pub_vel.publish(&vel);
+            pub_curv.publish(&curv);
 
-            joy_pub.publish(&twist);        // make the message ready to publish            
+
 
             // *** broadcast buttons ***
 
