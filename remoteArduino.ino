@@ -14,6 +14,15 @@ ros::Publisher pub_vel("vel", &vel);
 std_msgs::UInt16 curv;
 ros::Publisher pub_curv("curv", &curv);
 
+std_msgs::UInt16 eex;
+ros::Publisher pub_eex("eex", &eex);
+
+std_msgs::UInt16 eey;
+ros::Publisher pub_eey("eey", &eey);
+
+std_msgs::UInt16 eez;
+ros::Publisher pub_eez("eez", &eez);
+
 
 // timers for the sub-main loop
 unsigned long currentMillis;
@@ -49,49 +58,27 @@ void setup() {
   nh.advertise(pub_vel);      // advertise topic
   nh.advertise(pub_curv);      // advertise topic
   nh.advertise(pub_button);   // advertise topic
-
-}
-
-uint16_t deadzone(uint16_t value) {
-  return value;
-     if (value > 50) {
-        value = value - 50;
-     }
-     else if (value < -50) {
-      value = value +50;
-     }
-     else {
-      value = 0;
-     }
-     value = value / 500;   // scale so that we get 0.0 ~ 1.0
-     return value;  
-}
-
-int invButtons(int value) {
-  
-    if (value == 0) {
-      value = 1;
-    }
-    else if (value == 1) {
-      value = 0;
-    }
-    return value;
+  nh.advertise(pub_eex);   // advertise topic
+  nh.advertise(pub_eey);   // advertise topic
+  nh.advertise(pub_eez);   // advertise topic
 }
 
 
 
 // put your main code here, to run repeatedly:
 void loop() {
-  if(analogRead(A6)>350)
-    digitalWrite(13,HIGH);
-  else
-    digitalWrite(13,LOW);
-
   currentMillis = millis();
   if (currentMillis - previousMillis < loopTime) return;
   
   previousMillis = currentMillis;          // reset the clock to time it 
 
+  // buzzer
+  if(analogRead(A6)>350)
+    digitalWrite(13,HIGH);
+  else
+    digitalWrite(13,LOW);
+
+  // buttons
   combo = 1024 * digitalRead(2) + 
           512 * digitalRead(3) + 
           256 * digitalRead(4) + 
@@ -110,42 +97,24 @@ void loop() {
   stick5 = analogRead(A4);
   stick6 = analogRead(A5);
 
-/*stick1 = stick1 - 512;
-            stick1 = deadzone(stick1);
-            stick2 = stick2 - 512;
-            stick2 = deadzone(stick2);
-            stick3 = stick3 - 512;
-            stick3 = deadzone(stick3);
-            stick4 = stick4 - 512;
-            stick4 = deadzone(stick4);
-            stick5 = stick5 - 512;
-            stick5 = deadzone(stick5);
-            stick6 = stick6 - 512;
-            stick6 = deadzone(stick6);            
 
-            stick5 = stick5 * -1;   // invert value/direction as required based on wiring
-            stick3 = stick3 * -1;
+  // *** broadcast movement stick ***
+  vel.data = stick2;
+  curv.data = stick1;
+  pub_vel.publish(&vel);
+  pub_curv.publish(&curv);
 
-            //stick3 = stick3 * 2;    // extra scaling for yaw to mke driving nice
-*/
+  // *** broadcast EE stick ***
+  eex.data = stick4;
+  eey.data = stick5;
+  eez.data = stick6;
+  pub_eex.publish(&eex);
+  pub_eey.publish(&eey);
+  pub_eez.publish(&eez);
 
-            // *** broadcast cmd_vel twist message **
+  // *** broadcast buttons ***
+  button_msg.data = combo;
+  pub_button.publish(&button_msg);  
 
-            vel.data = stick2;
-            curv.data = stick1;
-            pub_vel.publish(&vel);
-            pub_curv.publish(&curv);
-
-
-
-            // *** broadcast buttons ***
-
-            button_msg.data = combo;
-            pub_button.publish(&button_msg);  
-
-            nh.spinOnce();                  // make sure we do ROS stuff every loop
-
-
-
-
+  nh.spinOnce();                  // make sure we do ROS stuff every loop
 }
