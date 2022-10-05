@@ -9,24 +9,8 @@ ros::NodeHandle nh;
 std_msgs::UInt16 button_msg;
 ros::Publisher pub_button("buttons", &button_msg);
 
-std_msgs::UInt16 vel;
-ros::Publisher pub_vel("vel", &vel);
-
-std_msgs::UInt16 curv;
-ros::Publisher pub_curv("curv", &curv);
-
-std_msgs::UInt16 pitch;
-ros::Publisher pub_pitch("pitch", &pitch);
-
-std_msgs::UInt16 eex;
-ros::Publisher pub_eex("eex", &eex);
-
-std_msgs::UInt16 eey;
-ros::Publisher pub_eey("eey", &eey);
-
-std_msgs::UInt16 eez;
-ros::Publisher pub_eez("eez", &eez);
-
+geometry_msgs::Twist twist;
+ros::Publisher pub_movement("twist_joystick", &twist);
 
 // timers for the sub-main loop
 unsigned long currentMillis;
@@ -40,6 +24,13 @@ uint16_t stick4;
 uint16_t stick5;
 uint16_t stick6;
 uint16_t combo = 0;
+
+float deadzone(float value) {
+  if (value >= 462 && value <= 562) {
+    return 512;
+  return value;  
+}
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -59,13 +50,8 @@ void setup() {
 
   //nh.getHardware()->setBaud(115200);      // set baud rate to 115200
   nh.initNode();              // init ROS
-  nh.advertise(pub_vel);      // advertise topic
-  nh.advertise(pub_curv);      // advertise topic
-  nh.advertise(pub_pitch);      // advertise topic
+  nh.advertise(pub_movement);      // advertise topic
   nh.advertise(pub_button);   // advertise topic
-  nh.advertise(pub_eex);   // advertise topic
-  nh.advertise(pub_eey);   // advertise topic
-  nh.advertise(pub_eez);   // advertise topic
 }
 
 
@@ -102,22 +88,16 @@ void loop() {
   stick5 = analogRead(A4);
   stick6 = analogRead(A5);
 
+  // *** broadcast joysticks ***
+  twist.linear.x = deadzone(stick1);
+  twist.linear.y = deadzone(stick2);
+  twist.linear.z = deadzone(stick3);
 
-  // *** broadcast movement stick ***
-  vel.data = stick2;
-  curv.data = stick1;
-  pitch.data = stick3;
-  pub_vel.publish(&vel);
-  pub_curv.publish(&curv);
-  pub_pitch.publish(&pitch);
+  twist.angular.x = deadzone(stick4);
+  twist.angular.y = deadzone(stick5);
+  twist.angular.z = deadzone(stick6);
 
-  // *** broadcast EE stick ***
-  eex.data = stick4;
-  eey.data = stick5;
-  eez.data = stick6;
-  pub_eex.publish(&eex);
-  pub_eey.publish(&eey);
-  pub_eez.publish(&eez);
+  pub_movement.publish(&twist);
 
   // *** broadcast buttons ***
   button_msg.data = combo;
