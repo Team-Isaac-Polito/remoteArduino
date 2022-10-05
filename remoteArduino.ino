@@ -25,10 +25,10 @@ uint16_t stick5;
 uint16_t stick6;
 uint16_t combo = 0;
 
-float deadzone(float value) {
-  if (value >= 462 && value <= 562) {
-    return 512;
-  return value;  
+float deadzoneCenter(float value) {
+  if (value >= 462 && value <= 562)
+    return 0;
+  return value-512;  
 }
 
 
@@ -89,13 +89,13 @@ void loop() {
   stick6 = analogRead(A5);
 
   // *** broadcast joysticks ***
-  twist.linear.x = deadzone(stick1);
-  twist.linear.y = deadzone(stick2);
-  twist.linear.z = deadzone(stick3);
+  twist.linear.x = deadzoneCenter(stick1);
+  twist.linear.y = deadzoneCenter(stick2);
+  twist.linear.z = deadzoneCenter(stick3);
 
-  twist.angular.x = deadzone(stick4);
-  twist.angular.y = deadzone(stick5);
-  twist.angular.z = deadzone(stick6);
+  twist.angular.x = deadzoneCenter(stick4);
+  twist.angular.y = deadzoneCenter(stick5);
+  twist.angular.z = deadzoneCenter(stick6);
 
   pub_movement.publish(&twist);
 
