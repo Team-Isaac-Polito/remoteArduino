@@ -1,6 +1,7 @@
 //ROS
 #include "ros.h"
 #include <std_msgs/UInt16.h>
+#include <geometry_msgs/Twist.h>
 #include <ros/time.h>
 
 ros::NodeHandle nh;
@@ -13,6 +14,9 @@ ros::Publisher pub_vel("vel", &vel);
 
 std_msgs::UInt16 curv;
 ros::Publisher pub_curv("curv", &curv);
+
+std_msgs::UInt16 pitch;
+ros::Publisher pub_pitch("pitch", &pitch);
 
 std_msgs::UInt16 eex;
 ros::Publisher pub_eex("eex", &eex);
@@ -27,7 +31,7 @@ ros::Publisher pub_eez("eez", &eez);
 // timers for the sub-main loop
 unsigned long currentMillis;
 long previousMillis = 0;    // set up timers
-float loopTime = 20;
+float loopTime = 80;
 
 uint16_t stick1;
 uint16_t stick2;
@@ -57,6 +61,7 @@ void setup() {
   nh.initNode();              // init ROS
   nh.advertise(pub_vel);      // advertise topic
   nh.advertise(pub_curv);      // advertise topic
+  nh.advertise(pub_pitch);      // advertise topic
   nh.advertise(pub_button);   // advertise topic
   nh.advertise(pub_eex);   // advertise topic
   nh.advertise(pub_eey);   // advertise topic
@@ -101,8 +106,10 @@ void loop() {
   // *** broadcast movement stick ***
   vel.data = stick2;
   curv.data = stick1;
+  pitch.data = stick3;
   pub_vel.publish(&vel);
   pub_curv.publish(&curv);
+  pub_pitch.publish(&pitch);
 
   // *** broadcast EE stick ***
   eex.data = stick4;
